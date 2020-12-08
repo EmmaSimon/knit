@@ -4,7 +4,7 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 
 import "./index.css";
-import "rmwc/dist/styles";
+import "antd/dist/antd.dark.css";
 import "fontsource-roboto/300.css";
 import "fontsource-roboto/400.css";
 import "fontsource-roboto/500.css";

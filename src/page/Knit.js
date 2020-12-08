@@ -1,0 +1,294 @@
+import React, { useEffect, useRef, useState } from "react";
+import { Card, Layout } from "antd";
+import { v4 as uuid } from "uuid";
+
+import Controls from "./Controls";
+import Sketch from "../draw/Sketch";
+import Pattern from "../pattern/Pattern";
+
+import {
+    DEFAULT_SCALE,
+    DEFAULT_SIZE,
+    INITIAL_COLOR_NAMES,
+    MAX_COLORS,
+    MAX_SCALE,
+    MIN_COLORS,
+    MIN_SCALE,
+    PALETTE_KEY,
+    PATTERN_KEY,
+} from "../utils/constants";
+import {
+    createArray,
+    getBoundedRandom,
+    getPatternName,
+    getRandomColor,
+} from "../utils/functions";
+import {
+    useIdSelectableLocalStorageRecencyArray,
+    usePrevious,
+} from "../utils/hooks";
+
+const Knit = () => {
+    const p5Instance = useRef();
+    const [sketchState, setSketchState] = useState({
+        scale: DEFAULT_SCALE,
+        w: DEFAULT_SIZE,
+        h: DEFAULT_SIZE,
+        name: getPatternName(),
+        generator: "playground",
+        r: getBoundedRandom(),
+        noiseSeed: getBoundedRandom(),
+    });
+
+    const [
+        selectedPalette,
+        committedPalettes,
+        handleSavePalette,
+        handleDeletePaletteById,
+    ] = useIdSelectableLocalStorageRecencyArray(PALETTE_KEY);
+    const [currentPaletteColors, setCurrentPaletteColors] = useState(
+        selectedPalette?.colors
+    );
+    const mergePattern = (pattern) =>
+        // Add an ID and default color display names to any new patterns
+        pattern.id
+            ? pattern
+            : {
+                  ...pattern,
+                  id: uuid(),
+                  colorDisplayNames: createArray(pattern.colors.length).map(
+                      (_, i) =>
+                          selectedPalette?.displayNames?.[i] ||
+                          INITIAL_COLOR_NAMES[i]
+                  ),
+              };
+    const [
+        selectedPattern,
+        committedPatterns,
+        handleSavePattern,
+        handleDeletePatternById,
+    ] = useIdSelectableLocalStorageRecencyArray(PATTERN_KEY, mergePattern);
+    const prevSelectedPalette = usePrevious(selectedPalette);
+    const prevSelectedPattern = usePrevious(selectedPattern);
+
+    // When the canvas colors change, update the current palette
+    useEffect(() => {
+        if (!sketchState.colors) {
+            return;
+        }
+        // Set the current canvas palette to the changed colors
+        setCurrentPaletteColors((prev = []) =>
+            prev?.length > sketchState.colors.length
+                ? [
+                      ...sketchState.colors,
+                      ...prev.slice(sketchState.colors.length),
+                  ]
+                : sketchState.colors
+        );
+    }, [sketchState.colors]);
+
+    // When the selected palette changes, update the canvas colors
+    useEffect(() => {
+        if (
+            !selectedPalette?.colors ||
+            selectedPalette === prevSelectedPalette
+        ) {
+            return;
+        }
+        const nextPalette =
+            currentPaletteColors.length > selectedPalette.colors.length
+                ? [
+                      ...selectedPalette.colors,
+                      ...currentPaletteColors.slice(
+                          selectedPalette.colors.length
+                      ),
+                  ]
+                : selectedPalette.colors;
+        // Set the current palette to the selected one
+        setCurrentPaletteColors(nextPalette);
+        // Then set the same number of canvas colors from the palette
+        setSketchState((prev) => ({
+            ...prev,
+            colors: nextPalette.slice(0, prev?.colors?.length || MIN_COLORS),
+        }));
+    }, [selectedPalette, prevSelectedPalette, currentPaletteColors]);
+
+    // When the sketch state's noise or random changes,
+    // rename the canvas and clear the selected pattern
+    useEffect(() => {
+        const resetKeys = ["generator", "r", "noiseSeed"];
+        if (
+            sketchState &&
+            selectedPattern &&
+            selectedPattern === prevSelectedPattern &&
+            resetKeys.some((key) => selectedPattern[key] !== sketchState[key])
+        ) {
+            setSketchState((prev) => ({ ...prev, name: getPatternName() }));
+            handleSavePattern(null);
+        }
+    }, [sketchState, handleSavePattern, selectedPattern, prevSelectedPattern]);
+
+    // When the selected pattern changes, update the sketch state and palette
+    // with the pattern's saved values
+    useEffect(() => {
+        if (
+            !selectedPattern ||
+            selectedPattern?.id === prevSelectedPattern?.id
+        ) {
+            return;
+        }
+        const {
+            id,
+            workingRow,
+            isFlipped,
+            ...strippedCanvas
+        } = selectedPattern;
+        setSketchState((prev) => ({ ...prev, ...strippedCanvas }));
+        setCurrentPaletteColors((prev) =>
+            prev && prev.length > selectedPattern.colors.length
+                ? [
+                      ...selectedPattern.colors,
+                      prev.slice(selectedPattern.colors.length),
+                  ]
+                : selectedPattern.colors
+        );
+        handleSavePalette(null);
+    }, [selectedPattern, prevSelectedPattern, handleSavePalette]);
+
+    const addColor = (nextColor = null) => {
+        if (selectedPattern) {
+            handleSavePattern(null);
+        }
+        if (selectedPalette) {
+            handleSavePalette(null);
+        }
+        setSketchState(({ colors, ...prev }) => ({
+            ...prev,
+            colors:
+                colors.length === MAX_COLORS
+                    ? colors
+                    : [
+                          ...colors,
+                          nextColor ||
+                              currentPaletteColors[colors.length] ||
+                              getRandomColor(p5Instance.current),
+                      ],
+        }));
+    };
+    const subtractColor = () => {
+        if (selectedPattern) {
+            handleSavePattern(null);
+        }
+        if (selectedPalette) {
+            handleSavePalette(null);
+        }
+        setSketchState(({ colors, ...prev }) => ({
+            ...prev,
+            colors:
+                colors.length === MIN_COLORS
+                    ? colors
+                    : colors.slice(0, colors.length - 1),
+        }));
+    };
+    const changeColor = (i, nextColor = null) => {
+        const color = nextColor || getRandomColor(p5Instance.current);
+        if (selectedPalette) {
+            handleSavePalette(null);
+        }
+        setSketchState(({ colors, ...prev }) => ({
+            ...prev,
+            colors:
+                !selectedPattern ||
+                selectedPattern.colors.length <= colors.length
+                    ? [...colors.slice(0, i), color, ...colors.slice(i + 1)]
+                    : colors,
+        }));
+    };
+    const rollNoise = (nextNoise) =>
+        setSketchState((prev) => ({
+            ...prev,
+            noiseSeed: nextNoise || getBoundedRandom(),
+        }));
+    const rollRandom = (nextRandom) =>
+        setSketchState((prev) => ({
+            ...prev,
+            r: nextRandom || getBoundedRandom(),
+        }));
+    const saveImage = () => {
+        p5Instance.current.saveCanvas(sketchState.name);
+    };
+    const clearPattern = () => {
+        handleSavePattern(null);
+    };
+    const savePattern = (mergePattern = null) => {
+        const grid = p5Instance.current.getGrid();
+        let nextPattern = {
+            ...selectedPattern,
+            ...sketchState,
+            ...mergePattern,
+            grid,
+        };
+        nextPattern = {
+            ...nextPattern,
+            scale: p5Instance.current.constrain(
+                nextPattern.scale,
+                MIN_SCALE,
+                MAX_SCALE
+            ),
+        };
+        console.log(nextPattern);
+        handleSavePattern(nextPattern);
+    };
+
+    return (
+        <Layout>
+            <Layout.Header>{sketchState.name}</Layout.Header>
+            <Layout>
+                <Layout.Sider width={300}>
+                    <Controls
+                        addColor={addColor}
+                        changeColor={changeColor}
+                        clearPattern={clearPattern}
+                        committedPalettes={committedPalettes}
+                        committedPatterns={committedPatterns}
+                        currentPaletteColors={currentPaletteColors}
+                        handleDeletePaletteById={handleDeletePaletteById}
+                        handleDeletePatternById={handleDeletePatternById}
+                        handleSavePalette={handleSavePalette}
+                        savePattern={savePattern}
+                        p5Instance={p5Instance}
+                        rollNoise={rollNoise}
+                        rollRandom={rollRandom}
+                        selectedPattern={selectedPattern}
+                        selectedPalette={selectedPalette}
+                        setSketchState={setSketchState}
+                        sketchState={sketchState}
+                        subtractColor={subtractColor}
+                    />
+                </Layout.Sider>
+                <Layout.Content>
+                    <Card>
+                        <Sketch
+                            addColor={addColor}
+                            changeColor={changeColor}
+                            savePattern={savePattern}
+                            p5Instance={p5Instance}
+                            rollNoise={rollNoise}
+                            rollRandom={rollRandom}
+                            selectedPattern={selectedPattern}
+                            setSketchState={setSketchState}
+                            sketchState={sketchState}
+                            saveImage={saveImage}
+                            subtractColor={subtractColor}
+                        />
+                    </Card>
+                    <Pattern
+                        savePattern={savePattern}
+                        selectedPattern={selectedPattern}
+                    />
+                </Layout.Content>
+            </Layout>
+        </Layout>
+    );
+};
+export default Knit;

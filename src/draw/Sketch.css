@@ -1,0 +1,10 @@
+.Sketch-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.Sketch-canvas {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
