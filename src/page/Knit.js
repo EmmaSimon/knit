@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Card, Layout } from "antd";
+import { Affix, Card, Col, Form, Layout, Row } from "antd";
 import { v4 as uuid } from "uuid";
 
 import Controls from "./Controls";
@@ -30,6 +30,7 @@ import {
 
 const Knit = () => {
     const p5Instance = useRef();
+    const [sketchForm] = Form.useForm();
     const [sketchState, setSketchState] = useState({
         scale: DEFAULT_SCALE,
         w: DEFAULT_SIZE,
@@ -128,6 +129,10 @@ const Knit = () => {
         }
     }, [sketchState, handleSavePattern, selectedPattern, prevSelectedPattern]);
 
+    useEffect(() => {
+        sketchForm.setFieldsValue(sketchState);
+    }, [sketchForm, sketchState]);
+
     // When the selected pattern changes, update the sketch state and palette
     // with the pattern's saved values
     useEffect(() => {
@@ -159,7 +164,10 @@ const Knit = () => {
         if (selectedPattern) {
             handleSavePattern(null);
         }
-        if (selectedPalette) {
+        if (
+            selectedPalette &&
+            sketchState.colors.length === selectedPalette.colors.length
+        ) {
             handleSavePalette(null);
         }
         setSketchState(({ colors, ...prev }) => ({
@@ -178,9 +186,6 @@ const Knit = () => {
     const subtractColor = () => {
         if (selectedPattern) {
             handleSavePattern(null);
-        }
-        if (selectedPalette) {
-            handleSavePalette(null);
         }
         setSketchState(({ colors, ...prev }) => ({
             ...prev,
@@ -204,15 +209,15 @@ const Knit = () => {
                     : colors,
         }));
     };
-    const rollNoise = (nextNoise) =>
+    const rollNoise = () =>
         setSketchState((prev) => ({
             ...prev,
-            noiseSeed: nextNoise || getBoundedRandom(),
+            noiseSeed: getBoundedRandom(),
         }));
-    const rollRandom = (nextRandom) =>
+    const rollRandom = () =>
         setSketchState((prev) => ({
             ...prev,
-            r: nextRandom || getBoundedRandom(),
+            r: getBoundedRandom(),
         }));
     const saveImage = () => {
         p5Instance.current.saveCanvas(sketchState.name);
@@ -241,54 +246,84 @@ const Knit = () => {
     };
 
     return (
-        <Layout>
-            <Layout.Header>{sketchState.name}</Layout.Header>
-            <Layout>
-                <Layout.Sider width={300}>
-                    <Controls
-                        addColor={addColor}
-                        changeColor={changeColor}
-                        clearPattern={clearPattern}
-                        committedPalettes={committedPalettes}
-                        committedPatterns={committedPatterns}
-                        currentPaletteColors={currentPaletteColors}
-                        handleDeletePaletteById={handleDeletePaletteById}
-                        handleDeletePatternById={handleDeletePatternById}
-                        handleSavePalette={handleSavePalette}
-                        savePattern={savePattern}
-                        p5Instance={p5Instance}
-                        rollNoise={rollNoise}
-                        rollRandom={rollRandom}
-                        selectedPattern={selectedPattern}
-                        selectedPalette={selectedPalette}
-                        setSketchState={setSketchState}
-                        sketchState={sketchState}
-                        subtractColor={subtractColor}
-                    />
-                </Layout.Sider>
-                <Layout.Content>
-                    <Card>
-                        <Sketch
+        <Row
+            style={{
+                height: "100%",
+            }}
+        >
+            <Layout
+                style={{
+                    height: "100vh",
+                    overflow: "hidden",
+                }}
+            >
+                <Col>
+                    <Layout.Sider
+                        width={300}
+                        style={{
+                            height: "100%",
+                            overflow: "auto",
+                        }}
+                    >
+                        <Controls
                             addColor={addColor}
                             changeColor={changeColor}
+                            clearPattern={clearPattern}
+                            committedPalettes={committedPalettes}
+                            committedPatterns={committedPatterns}
+                            currentPaletteColors={currentPaletteColors}
+                            handleDeletePaletteById={handleDeletePaletteById}
+                            handleDeletePatternById={handleDeletePatternById}
+                            handleSavePalette={handleSavePalette}
                             savePattern={savePattern}
                             p5Instance={p5Instance}
                             rollNoise={rollNoise}
                             rollRandom={rollRandom}
                             selectedPattern={selectedPattern}
+                            selectedPalette={selectedPalette}
                             setSketchState={setSketchState}
+                            sketchForm={sketchForm}
                             sketchState={sketchState}
-                            saveImage={saveImage}
                             subtractColor={subtractColor}
                         />
-                    </Card>
-                    <Pattern
-                        savePattern={savePattern}
-                        selectedPattern={selectedPattern}
-                    />
-                </Layout.Content>
+                    </Layout.Sider>
+                </Col>
+                <Col flex="auto">
+                    <Layout.Content
+                        style={{
+                            height: "100%",
+                            width: "100%",
+                            overflow: "auto",
+                            // position: "fixed",
+                            left: 300,
+                            top: 0,
+                            textAlign: "center",
+                        }}
+                    >
+                        <Layout.Header>{sketchState.name}</Layout.Header>
+                        <Card>
+                            <Sketch
+                                addColor={addColor}
+                                changeColor={changeColor}
+                                savePattern={savePattern}
+                                p5Instance={p5Instance}
+                                rollNoise={rollNoise}
+                                rollRandom={rollRandom}
+                                selectedPattern={selectedPattern}
+                                setSketchState={setSketchState}
+                                sketchState={sketchState}
+                                saveImage={saveImage}
+                                subtractColor={subtractColor}
+                            />
+                        </Card>
+                        <Pattern
+                            savePattern={savePattern}
+                            selectedPattern={selectedPattern}
+                        />
+                    </Layout.Content>
+                </Col>
             </Layout>
-        </Layout>
+        </Row>
     );
 };
 export default Knit;

@@ -66,6 +66,7 @@ export default function Controls({
     selectedPalette,
     selectedPattern,
     setSketchState,
+    sketchForm,
     sketchState,
     subtractColor,
 }) {
@@ -86,10 +87,17 @@ export default function Controls({
         <Collapse>
             <Collapse.Panel header="Canvas">
                 <Form
+                    form={sketchForm}
                     layout="vertical"
-                    onValuesChange={(values) =>
-                        setSketchState((prev) => ({ ...prev, ...values }))
-                    }
+                    onValuesChange={(values) => {
+                        if (
+                            Number.isNaN(values?.r) ||
+                            Number.isNaN(values?.noiseSeed)
+                        ) {
+                            return;
+                        }
+                        setSketchState((prev) => ({ ...prev, ...values }));
+                    }}
                     initialValues={sketchState}
                     size="large"
                 >
@@ -121,11 +129,24 @@ export default function Controls({
                         <Row gutter={8} align="bottom">
                             <Col span={18}>
                                 <Form.Item name="noiseSeed" noStyle>
-                                    <InputNumber style={{ width: "100%" }} />
+                                    <InputNumber
+                                        disabled={
+                                            generators?.[sketchState?.generator]
+                                                ?.noNoise
+                                        }
+                                        style={{ width: "100%" }}
+                                    />
                                 </Form.Item>
                             </Col>
                             <Col span={6}>
-                                <Button block onClick={rollNoise}>
+                                <Button
+                                    block
+                                    disabled={
+                                        generators?.[sketchState?.generator]
+                                            ?.noNoise
+                                    }
+                                    onClick={rollNoise}
+                                >
                                     <Icon icon="dice" />
                                 </Button>
                             </Col>

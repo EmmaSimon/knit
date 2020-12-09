@@ -6,7 +6,6 @@ import "./Sketch.css";
 import {
     arrayWeave,
     createArray,
-    getBoundedRandom,
     getCanvasSize,
     getGridMargin,
     getHeavyGridSpacing,
