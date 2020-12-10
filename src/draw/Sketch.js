@@ -19,16 +19,19 @@ import {
 import * as generators from "./generators";
 
 class Sketch extends Component {
+    p5Instance = null;
     p5Node = createRef();
     grid = createRef();
     currentProps = createRef();
 
     componentDidMount() {
         this.currentProps.current = this.props;
-        this.props.p5Instance.current = new p5(
-            this.sketch,
-            this.p5Node.current
-        );
+        this.p5Instance = this.props.p5Instance || createRef();
+        if (this.p5Instance.current) {
+            console.log("rem ", this.props.sketchState);
+            this.p5Instance.current.remove();
+        }
+        this.p5Instance.current = new p5(this.sketch, this.p5Node.current);
     }
 
     sketch = (p) => {
@@ -53,18 +56,19 @@ class Sketch extends Component {
             );
         };
         const draw2DGrid = (x, y, d) => {
-            const { scale, showGrid } = this.currentProps.current.sketchState;
-            const gridMargin = getGridMargin(showGrid, scale);
+            const {
+                sketchState: { scale, showGrid },
+                thumb,
+            } = this.currentProps.current;
+            const gridMargin = getGridMargin(showGrid, scale, thumb);
             p.square(gridMargin + x * scale, gridMargin + y * scale, scale);
         };
         const drawCaret = (direction) => {
             const {
-                h,
-                w,
-                scale,
-                showGrid,
-            } = this.currentProps.current.sketchState;
-            const margin = getGridMargin(showGrid, scale);
+                sketchState: { h, w, scale, showGrid },
+                thumb,
+            } = this.currentProps.current;
+            const margin = getGridMargin(showGrid, scale, thumb);
             const isVertical = direction === "up" || direction === "down";
 
             const midpoint = isVertical ? p.floor(w / 2) : p.floor(h / 2);
@@ -102,20 +106,18 @@ class Sketch extends Component {
         };
         const drawVerticalRow = (row) => {
             const {
-                h,
-                scale,
-                showGrid,
-            } = this.currentProps.current.sketchState;
-            const m = getGridMargin(showGrid, scale);
+                sketchState: { h, scale, showGrid },
+                thumb,
+            } = this.currentProps.current;
+            const m = getGridMargin(showGrid, scale, thumb);
             p.line(m + row * scale, m, m + row * scale, m + h * scale);
         };
         const drawHorizontalRow = (row) => {
             const {
-                w,
-                scale,
-                showGrid,
-            } = this.currentProps.current.sketchState;
-            const m = getGridMargin(showGrid, scale);
+                sketchState: { w, scale, showGrid },
+                thumb,
+            } = this.currentProps.current;
+            const m = getGridMargin(showGrid, scale, thumb);
             p.line(m, m + row * scale, m + w * scale, m + row * scale);
         };
 
@@ -137,15 +139,12 @@ class Sketch extends Component {
 
         p.setup = () => {
             const {
-                w,
-                h,
-                noiseSeed,
-                scale,
-                showGrid,
-            } = this.currentProps.current.sketchState;
-            const { thumb, thumbSize } = this.currentProps.current;
+                sketchState: { w, h, noiseSeed, scale, showGrid },
+                thumb,
+                thumbSize,
+            } = this.currentProps.current;
             p.colorMode(p.HSB);
-            const gridMargin = getGridMargin(showGrid, scale);
+            const gridMargin = getGridMargin(showGrid, scale, thumb);
             const [canvasWidth, canvasHeight] = getCanvasSize(
                 w,
                 h,
@@ -156,7 +155,7 @@ class Sketch extends Component {
             p.noLoop();
             p.noiseSeed(noiseSeed);
             if (this.props.thumb) {
-                // p5.disableFriendlyErrors = true;
+                p5.disableFriendlyErrors = true;
             }
             this.grid.current = createArray(h, w);
             this.props.setSketchState({
@@ -166,19 +165,20 @@ class Sketch extends Component {
         };
         p.draw = () => {
             const {
-                colors,
-                generator,
-                h,
-                scale,
-                w,
-                r,
-                noiseSeed,
-                showGrid,
-            } = this.currentProps.current.sketchState;
-            const {
+                selectedPattern,
+                sketchState: {
+                    name,
+                    colors,
+                    generator,
+                    h,
+                    scale,
+                    w,
+                    r,
+                    noiseSeed,
+                    showGrid,
+                },
                 thumb,
                 thumbSize,
-                selectedPattern,
             } = this.currentProps.current;
             if (
                 !generator ||
@@ -216,19 +216,24 @@ class Sketch extends Component {
                 thumb,
                 thumbSize
             );
-            const gridMargin = getGridMargin(showGrid, scale);
+            const gridMargin = getGridMargin(showGrid, scale, thumb);
             const nextGrid = createArray(drawHeight, drawWidth);
 
             if (!thumb) {
                 console.log(
-                    `Drawing:\n  Colors: ${colors.length}\n  Generator: ${generator}\n  Canvas: ${drawWidth}w x ${drawHeight}h\n  Random: ${r}\n  Noise: ${noiseSeed}`
+                    `Drawing${name ? ` "${name}"` : ""}:\n  Colors: ${
+                        colors.length
+                    }\n  Generator: ${generator}\n  Canvas: ${drawWidth}w x ${drawHeight}h\n  Random: ${r}\n  Noise: ${noiseSeed}`
                 );
             }
 
             for (let y = 0; y < drawHeight; y++) {
+                if (thumb && y > drawWidth) {
+                    break;
+                }
                 for (let x = 0; x < drawWidth; x++) {
-                    if (thumb && (x > drawWidth || y > drawWidth)) {
-                        continue;
+                    if (thumb && x > drawWidth) {
+                        break;
                     }
 
                     const determinate = generators[generator](
@@ -249,7 +254,7 @@ class Sketch extends Component {
                     // Write row and column numbers,
                     // spaced apart by the heavy grid space,
                     // always writing the first and last row
-                    if (showGrid) {
+                    if (showGrid && !thumb) {
                         p.strokeWeight(1);
                         p.fill("white");
 
@@ -291,7 +296,7 @@ class Sketch extends Component {
             }
             this.grid.current = nextGrid;
 
-            if (showGrid) {
+            if (showGrid && !thumb) {
                 p.strokeWeight(1);
                 p.stroke("#00000011");
 
@@ -319,7 +324,11 @@ class Sketch extends Component {
                 heavyVerticals.forEach(drawVerticalRow);
                 heavyHorizontals.forEach(drawHorizontalRow);
             }
-            if (selectedPattern && selectedPattern.workingRow !== null) {
+            if (
+                selectedPattern &&
+                selectedPattern.workingRow !== null &&
+                !thumb
+            ) {
                 const { isFlipped, workingRow } = selectedPattern;
                 const row = !isFlipped ? workingRow : h - workingRow - 1;
                 p.stroke(showGrid ? "white" : "black");
@@ -330,31 +339,36 @@ class Sketch extends Component {
             }
         };
 
-        p.keyTyped = () => {
-            if (this.props.thumb) {
+        p.keyPressed = () => {
+            const props = this.currentProps.current;
+            if (props.thumb) {
                 return;
             }
             switch (p.key) {
                 case "s":
-                    this.props.savePattern();
+                    props.savePattern();
                     break;
                 case "d":
-                    this.props.saveImage();
+                    props.saveImage();
                     break;
                 case "r":
-                    this.props.rollRandom();
+                    props.rollRandom();
                     break;
                 case "n":
-                    this.props.rollNoise();
+                    const { generator } = props.sketchState;
+                    if (generators[generator].noNoise) {
+                        break;
+                    }
+                    props.rollNoise();
                     break;
                 case "a":
                     console.log(this.grid.current);
                     break;
                 case "=":
-                    this.props.addColor();
+                    props.addColor();
                     break;
                 case "-":
-                    this.props.subtractColor();
+                    props.subtractColor();
                     break;
                 default:
                     break;
@@ -364,7 +378,18 @@ class Sketch extends Component {
 
     componentDidUpdate(prevProps) {
         const prevSketch = prevProps.sketchState;
-        const { thumb, thumbSize, selectedPattern, sketchState } = this.props;
+        const {
+            p5Instance,
+            selectedPattern,
+            sketchState,
+            thumb,
+            thumbSize,
+        } = this.props;
+
+        if (p5Instance && p5Instance !== this.p5Instance) {
+            this.p5Instance = p5Instance;
+        }
+
         if (
             !sketchState ||
             (sketchState === prevSketch &&
@@ -390,8 +415,8 @@ class Sketch extends Component {
             showGrid !== prevSketch?.showGrid
         ) {
             this.grid.current = createArray(drawWidth, drawHeight);
-            const gridMargin = getGridMargin(showGrid, scale);
-            this.props.p5Instance.current.resizeCanvas(
+            const gridMargin = getGridMargin(showGrid, scale, thumb);
+            this.p5Instance.current.resizeCanvas(
                 gridMargin * 2 + drawWidth * scale,
                 gridMargin * 2 + drawHeight * scale
             );
@@ -399,7 +424,7 @@ class Sketch extends Component {
             selectedPattern !== prevProps.selectedPattern ||
             sketchState !== prevSketch
         ) {
-            this.props.p5Instance.current.redraw();
+            this.p5Instance.current.redraw();
         }
     }
 
@@ -415,7 +440,7 @@ class Sketch extends Component {
 Sketch.defaultProps = {
     thumb: false,
     thumbSize: DEFAULT_THUMBNAIL_SIZE,
-    p5Instance: createRef(),
+    p5Instance: null,
     selectedPattern: null,
     sketchState: {},
     savePattern: () => {},

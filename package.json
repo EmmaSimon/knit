@@ -10,6 +10,7 @@
     "@testing-library/react": "^11.2.2",
     "@testing-library/user-event": "^12.2.2",
     "antd": "^4.9.1",
+    "debounce": "^1.2.0",
     "fontsource-roboto": "^3.0.3",
     "p5": "^1.1.9",
     "random-words": "^1.1.1",

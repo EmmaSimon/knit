@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { debounce } from "debounce";
 
 import {
     Card,
@@ -29,7 +30,7 @@ import {
     MIN_SCALE,
     MIN_SIZE,
 } from "../utils/constants";
-import { createArray, getBoundedRandom } from "../utils/functions";
+import { createArray } from "../utils/functions";
 import * as generators from "../draw/generators";
 
 const generatorArray = Object.entries(generators);
@@ -83,6 +84,7 @@ export default function Controls({
     ]);
 
     const currentColors = sketchState.colors;
+    const debouncedSetSketch = debounce(setSketchState, 200);
     return (
         <Collapse>
             <Collapse.Panel header="Canvas">
@@ -96,7 +98,7 @@ export default function Controls({
                         ) {
                             return;
                         }
-                        setSketchState((prev) => ({ ...prev, ...values }));
+                        debouncedSetSketch((prev) => ({ ...prev, ...values }));
                     }}
                     initialValues={sketchState}
                     size="large"
@@ -110,7 +112,7 @@ export default function Controls({
                             ))}
                         </Select>
                     </Form.Item>
-                    <Form.Item label="Random Multiplier">
+                    <Form.Item label="Multiplier">
                         <Row gutter={8} align="bottom">
                             <Col span={18}>
                                 <Form.Item name="r" noStyle>

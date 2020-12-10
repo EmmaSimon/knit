@@ -37,8 +37,8 @@ export const getCanvasSize = (
     thumbSize = DEFAULT_THUMBNAIL_SIZE
 ) => (thumb ? [thumbSize, thumbSize] : [x, y]);
 
-export const getGridMargin = (showGrid, scale) =>
-    showGrid ? scale * 2 + GRID_PADDING : 0;
+export const getGridMargin = (showGrid, scale, thumb) =>
+    showGrid && !thumb ? scale * 2 + GRID_PADDING : 0;
 
 const IDEAL_SPACING = 5;
 const spacingReducer = (a, b) =>

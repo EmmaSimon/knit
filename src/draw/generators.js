@@ -5,13 +5,13 @@ const reverseInwardSymmetry = (p, max) => (p < (max - 1) / 2 ? max - 1 - p : p);
 const reverseOutwardSymmetry = (p, max) =>
     p < (max - 1) / 2 ? p + 1 + (max - 1) / 2 : max - p + (max - 1) / 2;
 
-export const biDissolve = (p, x, y, { w }) => {
+export const biDissolve = (p, x, y, { r, w }) => {
     const flipX = inwardSymmetry(x, w);
-    let v = 1 / p.cos((y * flipX) / p.pow(2, p.noise(flipX) * y));
+    let v = (r * 0.001) / p.cos((y * flipX) / p.pow(2, p.noise(flipX) * y));
     if (Number.isNaN(v)) {
         v = 0;
     }
-    return p.norm(v, -1, 1);
+    return p.norm(v, -3, 3);
 };
 
 export const quadDissolve = (p, x, y, { h, w }) => {
@@ -21,7 +21,7 @@ export const quadDissolve = (p, x, y, { h, w }) => {
     if (Number.isNaN(v)) {
         v = 0;
     }
-    return p.norm(v, -1, 1);
+    return p.norm(v, -3, 3);
 };
 
 export const quadTexture = (p, x, y, { r, h, w }) => {
@@ -31,7 +31,7 @@ export const quadTexture = (p, x, y, { r, h, w }) => {
     if (Number.isNaN(v)) {
         v = 0;
     }
-    return p.norm(v, -1, 1);
+    return p.norm(v, -3, 3);
 };
 
 export const mirrorCos = (p, x, y, { r, w, h }) =>
@@ -72,31 +72,40 @@ export const powCos = (p, x, y, { r, w, h }) => {
 };
 powCos.noNoise = true;
 
-export const powCos2 = (p, x, y, { r, w, h }) => {
+export const powNoise = (p, x, y, { r, w, h }) => {
     const symY = reverseOutwardSymmetry(y, h);
     const symX = reverseOutwardSymmetry(x, w);
     let v =
         0.00000000000005 *
         r *
         p.pow(symX * symY, 3) *
-        p.cos(1000 * r * (2 / symY) * (2 / symX));
+        p.cos(p.noise(symX) * p.noise(symY) * 100000 * (2 / symY) * (2 / symX));
     if (Number.isNaN(v)) {
         v = 0;
     }
     return v;
 };
 
-export const playground = (p, x, y, { r, h, w }) => {
-    const flipX = x > (w - 1) / 2 ? x : x - w;
-
-    const symX = x > (w - 1) / 2 ? (w - 1) / 2 - x : x - (w - 1) / 2;
-    const symY = y > (h - 1) / 2 ? (h - 1) / 2 - y : y - (h - 1) / 2;
-    let v = p.noise(r * symX, symY * symX);
-    if (Number.isNaN(v)) {
-        v = 0;
-    }
-    return p.norm(v, 0, 1);
-};
+// export const playground = (p, x, y, { r, h, w }) => {
+//     const flipX = inwardSymmetry(x, w);
+//     let v = (r * 0.001) / p.cos((y * flipX) / p.pow(2, p.noise(flipX) * y));
+//     if (Number.isNaN(v)) {
+//         v = 0;
+//     }
+//     return p.norm(v, -3, 3);
+// };
+//
+// export const playground2 = (p, x, y, { r, h, w }) => {
+//     const flipX = x > (w - 1) / 2 ? x : x - w;
+//
+//     const symX = x > (w - 1) / 2 ? (w - 1) / 2 - x : x - (w - 1) / 2;
+//     const symY = y > (h - 1) / 2 ? (h - 1) / 2 - y : y - (h - 1) / 2;
+//     let v = p.noise(r * symX, symY * symX);
+//     if (Number.isNaN(v)) {
+//         v = 0;
+//     }
+//     return p.norm(v, 0, 1);
+// };
 
 const ff = (p) => (x, y) => {
     const flipX = x > 50 ? 100 - x : x;

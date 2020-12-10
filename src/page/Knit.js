@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Affix, Card, Col, Form, Layout, Row } from "antd";
+import { Card, Col, Form, Layout, Row } from "antd";
 import { v4 as uuid } from "uuid";
 
 import Controls from "./Controls";
@@ -36,7 +36,7 @@ const Knit = () => {
         w: DEFAULT_SIZE,
         h: DEFAULT_SIZE,
         name: getPatternName(),
-        generator: "playground",
+        generator: "flipCos",
         r: getBoundedRandom(),
         noiseSeed: getBoundedRandom(),
     });
@@ -209,22 +209,15 @@ const Knit = () => {
                     : colors,
         }));
     };
+
     const rollNoise = () =>
-        setSketchState((prev) => ({
-            ...prev,
-            noiseSeed: getBoundedRandom(),
-        }));
+        setSketchState((prev) => ({ ...prev, noiseSeed: getBoundedRandom() }));
+
     const rollRandom = () =>
-        setSketchState((prev) => ({
-            ...prev,
-            r: getBoundedRandom(),
-        }));
-    const saveImage = () => {
-        p5Instance.current.saveCanvas(sketchState.name);
-    };
-    const clearPattern = () => {
-        handleSavePattern(null);
-    };
+        setSketchState((prev) => ({ ...prev, r: getBoundedRandom() }));
+
+    const saveImage = () => p5Instance.current.saveCanvas(sketchState.name);
+    const clearPattern = () => handleSavePattern(null);
     const savePattern = (mergePattern = null) => {
         const grid = p5Instance.current.getGrid();
         let nextPattern = {
