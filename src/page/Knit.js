@@ -71,6 +71,7 @@ const Knit = () => {
     ] = useIdSelectableLocalStorageRecencyArray(PATTERN_KEY, mergePattern);
     const prevSelectedPalette = usePrevious(selectedPalette);
     const prevSelectedPattern = usePrevious(selectedPattern);
+    const prevSketchState = usePrevious(sketchState);
 
     // When the canvas colors change, update the current palette
     useEffect(() => {
@@ -118,16 +119,28 @@ const Knit = () => {
     // rename the canvas and clear the selected pattern
     useEffect(() => {
         const resetKeys = ["generator", "r", "noiseSeed"];
+        debugger;
         if (
             sketchState &&
-            selectedPattern &&
-            selectedPattern === prevSelectedPattern &&
-            resetKeys.some((key) => selectedPattern[key] !== sketchState[key])
+            (selectedPattern
+                ? prevSelectedPattern === selectedPattern &&
+                  resetKeys.some(
+                      (key) => selectedPattern[key] !== sketchState[key]
+                  )
+                : resetKeys.some(
+                      (key) => prevSketchState?.[key] !== sketchState[key]
+                  ))
         ) {
             setSketchState((prev) => ({ ...prev, name: getPatternName() }));
             handleSavePattern(null);
         }
-    }, [sketchState, handleSavePattern, selectedPattern, prevSelectedPattern]);
+    }, [
+        sketchState,
+        prevSketchState,
+        handleSavePattern,
+        selectedPattern,
+        prevSelectedPattern,
+    ]);
 
     useEffect(() => {
         sketchForm.setFieldsValue(sketchState);
