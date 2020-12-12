@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { debounce } from "debounce";
-import ReactGA from "react-ga";
 
 import {
     Card,
@@ -99,12 +98,13 @@ export default function Controls({
                         ) {
                             return;
                         }
-                        ReactGA.event({
-                            category: "Canvas",
-                            action: "Modified",
-                            label: JSON.stringify(values),
+                        debouncedSetSketch((prev) => {
+                            window.gtag("event", "canvas", {
+                                action: "modified",
+                                pattern: values,
+                            });
+                            return { ...prev, ...values };
                         });
-                        debouncedSetSketch((prev) => ({ ...prev, ...values }));
                     }}
                     initialValues={sketchState}
                     size="large"
@@ -306,10 +306,9 @@ export default function Controls({
                                     INITIAL_COLOR_NAMES[i]
                             ),
                         });
-                        ReactGA.event({
-                            category: "Palette",
-                            action: "Saved",
-                            label: JSON.stringify(currentPaletteColors),
+                        window.gtag("event", "palette", {
+                            action: "save",
+                            palette: currentPaletteColors,
                         });
                     }}
                 >
@@ -326,10 +325,9 @@ export default function Controls({
                                     ({ id }) => id === paletteId
                                 ) || null;
                             handleSavePalette(selectedPalette);
-                            ReactGA.event({
-                                category: "Palette",
-                                action: "Loaded",
-                                label: JSON.stringify(selectedPalette),
+                            window.gtag("event", "palette", {
+                                action: "select",
+                                palette: selectedPalette,
                             });
                             if (!selectedPalette || !selectedPattern) {
                                 return;

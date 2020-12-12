@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Card, Col, Form, Layout, Row, Typography } from "antd";
 import { v4 as uuid } from "uuid";
-import ReactGA from "react-ga";
 
 import Controls from "./Controls";
 import Sketch from "../draw/Sketch";
@@ -53,7 +52,7 @@ const Knit = () => {
     );
     const mergePattern = (pattern) => {
         if (!pattern.id) {
-            ReactGA.event({ category: "Pattern", action: "Create" });
+            window.gtag("event", "pattern", { action: "create", pattern });
         }
         // Add an ID and default color display names to any new patterns
         return pattern.id
@@ -199,10 +198,7 @@ const Knit = () => {
                               getRandomColor(p5Instance.current),
                       ],
         }));
-        ReactGA.event({
-            category: "Color",
-            action: "Add",
-        });
+        window.gtag("event", "color", { action: "add" });
     };
     const subtractColor = () => {
         if (selectedPattern) {
@@ -215,10 +211,7 @@ const Knit = () => {
                     ? colors
                     : colors.slice(0, colors.length - 1),
         }));
-        ReactGA.event({
-            category: "Color",
-            action: "Subtract",
-        });
+        window.gtag("event", "color", { action: "subtract" });
     };
     const changeColor = (i, nextColor = null) => {
         const color = nextColor || getRandomColor(p5Instance.current);
@@ -233,26 +226,24 @@ const Knit = () => {
                     ? [...colors.slice(0, i), color, ...colors.slice(i + 1)]
                     : colors,
         }));
-        ReactGA.event({
-            category: "Color",
-            action: "Change",
-            label: color,
-        });
+        window.gtag("event", "color", { action: "change", color });
     };
 
     const rollNoise = () => {
-        setSketchState((prev) => ({ ...prev, noiseSeed: getBoundedRandom() }));
-        ReactGA.event({ category: "Canvas", action: "Roll Noise" });
+        const noiseSeed = getBoundedRandom();
+        setSketchState((prev) => ({ ...prev, noiseSeed }));
+        window.gtag("event", "canvas", { action: "roll noise", noiseSeed });
     };
 
     const rollRandom = () => {
-        setSketchState((prev) => ({ ...prev, r: getBoundedRandom() }));
-        ReactGA.event({ category: "Canvas", action: "Roll Multiplier" });
+        const r = getBoundedRandom();
+        setSketchState((prev) => ({ ...prev, r }));
+        window.gtag("event", "canvas", { action: "roll multiplier", r });
     };
 
     const saveImage = () => {
         p5Instance.current.saveCanvas(sketchState.name);
-        ReactGA.event({ category: "Canvas", action: "Save Image" });
+        window.gtag("event", "canvas", { action: "download image" });
     };
     const clearPattern = () => handleSavePattern(null);
     const savePattern = (mergePattern = null) => {
@@ -273,7 +264,12 @@ const Knit = () => {
         };
         console.log(nextPattern);
         handleSavePattern(nextPattern);
-        ReactGA.event({ category: "Pattern", action: "Save" });
+        if (nextPattern.id) {
+            window.gtag("event", "pattern", {
+                action: "update",
+                pattern: nextPattern,
+            });
+        }
     };
 
     return (
