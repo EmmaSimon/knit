@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
+import ReactGA from "react-ga";
 
 import "./index.css";
 import "antd/dist/antd.dark.css";
@@ -9,6 +10,8 @@ import "fontsource-roboto/300.css";
 import "fontsource-roboto/400.css";
 import "fontsource-roboto/500.css";
 import "fontsource-roboto/700.css";
+
+ReactGA.initialize("G-4SPLK2BP39");
 
 ReactDOM.render(
     <React.StrictMode>
