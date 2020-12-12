@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Card, Col, Form, Layout, Row } from "antd";
+import { Card, Col, Form, Layout, Row, Typography } from "antd";
 import { v4 as uuid } from "uuid";
 
 import Controls from "./Controls";
@@ -119,7 +119,6 @@ const Knit = () => {
     // rename the canvas and clear the selected pattern
     useEffect(() => {
         const resetKeys = ["generator", "r", "noiseSeed"];
-        debugger;
         if (
             sketchState &&
             (selectedPattern
@@ -300,32 +299,61 @@ const Knit = () => {
                             height: "100%",
                             width: "100%",
                             overflow: "auto",
-                            // position: "fixed",
                             left: 300,
                             top: 0,
                             textAlign: "center",
                         }}
                     >
                         <Layout.Header>{sketchState.name}</Layout.Header>
-                        <Card>
-                            <Sketch
-                                addColor={addColor}
-                                changeColor={changeColor}
+                        <Layout.Content>
+                            <Card>
+                                <Sketch
+                                    addColor={addColor}
+                                    changeColor={changeColor}
+                                    savePattern={savePattern}
+                                    p5Instance={p5Instance}
+                                    rollNoise={rollNoise}
+                                    rollRandom={rollRandom}
+                                    selectedPattern={selectedPattern}
+                                    setSketchState={setSketchState}
+                                    sketchState={sketchState}
+                                    saveImage={saveImage}
+                                    subtractColor={subtractColor}
+                                />
+                            </Card>
+                            <Pattern
                                 savePattern={savePattern}
-                                p5Instance={p5Instance}
-                                rollNoise={rollNoise}
-                                rollRandom={rollRandom}
                                 selectedPattern={selectedPattern}
-                                setSketchState={setSketchState}
-                                sketchState={sketchState}
-                                saveImage={saveImage}
-                                subtractColor={subtractColor}
                             />
-                        </Card>
-                        <Pattern
-                            savePattern={savePattern}
-                            selectedPattern={selectedPattern}
-                        />
+                        </Layout.Content>
+                        <Layout.Footer>
+                            <Typography.Text type="secondary">
+                                Icons from{" "}
+                                <Typography.Link
+                                    href="https://fontawesome.com/"
+                                    title="Font Awesome"
+                                    type="secondary"
+                                >
+                                    Font Awesome
+                                </Typography.Link>
+                                , favicon by{" "}
+                                <Typography.Link
+                                    href="https://www.flaticon.com/authors/dimitry-miroliubov"
+                                    title="Dimitry Miroliubov"
+                                    type="secondary"
+                                >
+                                    Dimitry Miroliubov
+                                </Typography.Link>{" "}
+                                from{" "}
+                                <Typography.Link
+                                    href="https://www.flaticon.com/"
+                                    title="Flaticon"
+                                    type="secondary"
+                                >
+                                    flaticon
+                                </Typography.Link>
+                            </Typography.Text>
+                        </Layout.Footer>
                     </Layout.Content>
                 </Col>
             </Layout>
