@@ -101,7 +101,7 @@ export default function Controls({
                         debouncedSetSketch((prev) => {
                             window.gtag("event", "canvas", {
                                 action: "modified",
-                                pattern: values,
+                                ...values,
                             });
                             return { ...prev, ...values };
                         });
@@ -327,7 +327,7 @@ export default function Controls({
                             handleSavePalette(selectedPalette);
                             window.gtag("event", "palette", {
                                 action: "select",
-                                palette: selectedPalette,
+                                palette: selectedPalette.colors,
                             });
                             if (!selectedPalette || !selectedPattern) {
                                 return;
