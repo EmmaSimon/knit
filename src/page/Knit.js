@@ -52,7 +52,11 @@ const Knit = () => {
     );
     const mergePattern = (pattern) => {
         if (!pattern.id) {
-            window.gtag("event", "pattern", { action: "create", ...pattern });
+            const { grid, ...trackPattern } = pattern;
+            window.gtag("event", "pattern", {
+                action: "create",
+                ...trackPattern,
+            });
         }
         // Add an ID and default color display names to any new patterns
         return pattern.id
@@ -265,9 +269,10 @@ const Knit = () => {
         console.log(nextPattern);
         handleSavePattern(nextPattern);
         if (nextPattern.id) {
+            const { grid, ...trackPattern } = nextPattern;
             window.gtag("event", "pattern", {
                 action: "update",
-                ...nextPattern,
+                ...trackPattern,
             });
         }
     };
