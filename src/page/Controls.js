@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { debounce } from "debounce";
+import ReactGA from "react-ga";
 
 import {
     Card,
@@ -98,6 +99,11 @@ export default function Controls({
                         ) {
                             return;
                         }
+                        ReactGA.event({
+                            category: "Canvas",
+                            action: "Modified",
+                            label: JSON.stringify(values),
+                        });
                         debouncedSetSketch((prev) => ({ ...prev, ...values }));
                     }}
                     initialValues={sketchState}
@@ -287,7 +293,7 @@ export default function Controls({
                     )}
                 <Button
                     block
-                    onClick={() =>
+                    onClick={() => {
                         handleSavePalette({
                             ...selectedPalette,
                             colors: currentPaletteColors,
@@ -299,8 +305,13 @@ export default function Controls({
                                     selectedPalette?.displayNames?.[i] ||
                                     INITIAL_COLOR_NAMES[i]
                             ),
-                        })
-                    }
+                        });
+                        ReactGA.event({
+                            category: "Palette",
+                            action: "Saved",
+                            label: JSON.stringify(currentPaletteColors),
+                        });
+                    }}
                 >
                     <Space>
                         <Icon icon="save" />
@@ -314,8 +325,12 @@ export default function Controls({
                                 committedPalettes.find(
                                     ({ id }) => id === paletteId
                                 ) || null;
-                            console.log("select pal", selectedPalette);
                             handleSavePalette(selectedPalette);
+                            ReactGA.event({
+                                category: "Palette",
+                                action: "Loaded",
+                                label: JSON.stringify(selectedPalette),
+                            });
                             if (!selectedPalette || !selectedPattern) {
                                 return;
                             }

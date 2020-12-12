@@ -12,6 +12,7 @@ import "fontsource-roboto/500.css";
 import "fontsource-roboto/700.css";
 
 ReactGA.initialize("G-4SPLK2BP39");
+ReactGA.pageview("/");
 
 ReactDOM.render(
     <React.StrictMode>
