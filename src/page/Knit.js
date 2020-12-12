@@ -311,6 +311,7 @@ const Knit = () => {
                             p5Instance={p5Instance}
                             rollNoise={rollNoise}
                             rollRandom={rollRandom}
+                            saveImage={saveImage}
                             selectedPattern={selectedPattern}
                             selectedPalette={selectedPalette}
                             setSketchState={setSketchState}

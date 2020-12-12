@@ -63,6 +63,7 @@ export default function Controls({
     handleSavePalette,
     rollNoise,
     rollRandom,
+    saveImage,
     savePattern,
     selectedPalette,
     selectedPattern,
@@ -107,7 +108,7 @@ export default function Controls({
                         });
                     }}
                     initialValues={sketchState}
-                    size="large"
+                    size="medium"
                 >
                     <Form.Item label="Generator" name="generator">
                         <Select>
@@ -132,7 +133,6 @@ export default function Controls({
                             </Col>
                         </Row>
                     </Form.Item>
-
                     <Form.Item label="Noise Seed">
                         <Row gutter={8} align="bottom">
                             <Col span={18}>
@@ -160,41 +160,62 @@ export default function Controls({
                             </Col>
                         </Row>
                     </Form.Item>
-                    <Form.Item label="Width" name="w">
-                        <InputNumber
-                            max={MAX_SIZE}
-                            min={MIN_SIZE}
-                            style={{ width: "100%" }}
-                        />
-                    </Form.Item>
-                    <Form.Item label="Height" name="h">
-                        <InputNumber
-                            max={MAX_SIZE}
-                            min={MIN_SIZE}
-                            style={{ width: "100%" }}
-                        />
-                    </Form.Item>
-                    <Form.Item label="Scale" name="scale">
-                        <InputNumber
-                            max={MAX_SCALE}
-                            min={MIN_SCALE}
-                            style={{ width: "100%" }}
-                        />
-                    </Form.Item>
-                    <Form.Item label="Show Grid" style={{ minHeight: "0" }}>
-                        <Row>
-                            <Col>
-                                <Form.Item
-                                    name="showGrid"
-                                    noStyle
-                                    valuePropName="checked"
-                                >
-                                    <Switch />
-                                </Form.Item>
-                            </Col>
-                        </Row>
-                    </Form.Item>
+                    <Row gutter={8} align="bottom">
+                        <Col span={12}>
+                            <Form.Item label="Width" name="w">
+                                <InputNumber
+                                    max={MAX_SIZE}
+                                    min={MIN_SIZE}
+                                    style={{ width: "100%" }}
+                                />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item label="Height" name="h">
+                                <InputNumber
+                                    max={MAX_SIZE}
+                                    min={MIN_SIZE}
+                                    style={{ width: "100%" }}
+                                />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                    <Row gutter={8} align="bottom">
+                        <Col span={16}>
+                            <Form.Item label="Scale" name="scale">
+                                <InputNumber
+                                    max={MAX_SCALE}
+                                    min={MIN_SCALE}
+                                    style={{ width: "100%" }}
+                                />
+                            </Form.Item>
+                        </Col>
+                        <Col span={8}>
+                            <Form.Item
+                                label="Show Grid"
+                                style={{ minHeight: "0" }}
+                            >
+                                <Row>
+                                    <Col>
+                                        <Form.Item
+                                            name="showGrid"
+                                            noStyle
+                                            valuePropName="checked"
+                                        >
+                                            <Switch />
+                                        </Form.Item>
+                                    </Col>
+                                </Row>
+                            </Form.Item>
+                        </Col>
+                    </Row>
                 </Form>
+                <Button block onClick={saveImage}>
+                    <Space>
+                        <Icon icon="file-download" />
+                        <span>Download Image</span>
+                    </Space>
+                </Button>
             </Collapse.Panel>
             <Collapse.Panel header="Colors">
                 <Row gutter={8}>
