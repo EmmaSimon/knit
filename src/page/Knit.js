@@ -198,7 +198,7 @@ const Knit = () => {
                     : [
                           ...colors,
                           nextColor ||
-                              currentPaletteColors[colors.length] ||
+                              currentPaletteColors?.[colors.length] ||
                               getRandomColor(p5Instance.current),
                       ],
         }));
