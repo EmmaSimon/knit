@@ -19,9 +19,11 @@ import {
 } from "../utils/constants";
 import {
     createArray,
+    mergeArrayOver,
     getBoundedRandom,
     getPatternName,
     getRandomColor,
+    getRandomPalette,
 } from "../utils/functions";
 import {
     useIdSelectableLocalStorageRecencyArray,
@@ -48,7 +50,7 @@ const Knit = () => {
         handleDeletePaletteById,
     ] = useIdSelectableLocalStorageRecencyArray(PALETTE_KEY);
     const [currentPaletteColors, setCurrentPaletteColors] = useState(
-        selectedPalette?.colors
+        getRandomPalette()
     );
     const mergePattern = (pattern) => {
         if (!pattern.id) {
@@ -88,12 +90,7 @@ const Knit = () => {
         }
         // Set the current canvas palette to the changed colors
         setCurrentPaletteColors((prev = []) =>
-            prev?.length > sketchState.colors.length
-                ? [
-                      ...sketchState.colors,
-                      ...prev.slice(sketchState.colors.length),
-                  ]
-                : sketchState.colors
+            mergeArrayOver(sketchState.colors, prev)
         );
     }, [sketchState.colors]);
 
@@ -105,15 +102,10 @@ const Knit = () => {
         ) {
             return;
         }
-        const nextPalette =
-            currentPaletteColors.length > selectedPalette.colors.length
-                ? [
-                      ...selectedPalette.colors,
-                      ...currentPaletteColors.slice(
-                          selectedPalette.colors.length
-                      ),
-                  ]
-                : selectedPalette.colors;
+        const nextPalette = mergeArrayOver(
+            selectedPalette.colors,
+            currentPaletteColors
+        );
         // Set the current palette to the selected one
         setCurrentPaletteColors(nextPalette);
         // Then set the same number of canvas colors from the palette
@@ -169,13 +161,8 @@ const Knit = () => {
             ...strippedCanvas
         } = selectedPattern;
         setSketchState((prev) => ({ ...prev, ...strippedCanvas }));
-        setCurrentPaletteColors((prev) =>
-            prev && prev.length > selectedPattern.colors.length
-                ? [
-                      ...selectedPattern.colors,
-                      prev.slice(selectedPattern.colors.length),
-                  ]
-                : selectedPattern.colors
+        setCurrentPaletteColors((prev = []) =>
+            mergeArrayOver(selectedPattern.colors, prev)
         );
         handleSavePalette(null);
     }, [selectedPattern, prevSelectedPattern, handleSavePalette]);
@@ -231,6 +218,18 @@ const Knit = () => {
                     : colors,
         }));
         window.gtag("event", "color", { action: "change", color });
+    };
+
+    const rollPalette = () => {
+        const nextPalette = mergeArrayOver(
+            getRandomPalette(),
+            currentPaletteColors
+        );
+        setCurrentPaletteColors(nextPalette);
+        setSketchState(({ colors, ...prev }) => ({
+            ...prev,
+            colors: nextPalette.slice(0, colors.length),
+        }));
     };
 
     const rollNoise = () => {
@@ -310,6 +309,7 @@ const Knit = () => {
                             savePattern={savePattern}
                             p5Instance={p5Instance}
                             rollNoise={rollNoise}
+                            rollPalette={rollPalette}
                             rollRandom={rollRandom}
                             saveImage={saveImage}
                             selectedPattern={selectedPattern}

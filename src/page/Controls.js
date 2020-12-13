@@ -62,6 +62,7 @@ export default function Controls({
     handleDeletePatternById,
     handleSavePalette,
     rollNoise,
+    rollPalette,
     rollRandom,
     saveImage,
     savePattern,
@@ -312,6 +313,13 @@ export default function Controls({
                             height={10}
                         />
                     )}
+
+                <Button block onClick={rollPalette}>
+                    <Space>
+                        <Icon icon="dice" />
+                        <span>Random Palette</span>
+                    </Space>
+                </Button>
                 <Button
                     block
                     onClick={() => {

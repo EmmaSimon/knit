@@ -1,6 +1,10 @@
 import randomWords from "random-words";
 
-import { DEFAULT_THUMBNAIL_SIZE, GRID_PADDING } from "./constants";
+import {
+    DEFAULT_THUMBNAIL_SIZE,
+    GRID_PADDING,
+    PRESET_PALETTES,
+} from "./constants";
 
 export const xor = (a, b) => {
     return a ? !b : b;
@@ -16,6 +20,15 @@ export function createArray(length) {
     return arr;
 }
 
+export const getShuffledArray = (array) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+};
+
 export const getBoundedRandom = (min = -1000, max = 1000) =>
     Math.random() * (max - min) + min;
 
@@ -29,6 +42,16 @@ export const getRandomColor = (p) =>
             p.constrain(p.randomGaussian(80, 30), 15, 95)
         )
         .toString("#rrggbbaa");
+
+export const getRandomPalette = () =>
+    getShuffledArray(
+        PRESET_PALETTES[Math.floor(Math.random() * PRESET_PALETTES.length)]
+    );
+
+export const mergeArrayOver = (mergeArray, baseArray) =>
+    baseArray?.length > mergeArray.length
+        ? [...mergeArray, ...baseArray.slice(mergeArray.length)]
+        : mergeArray;
 
 export const getCanvasSize = (
     x,
